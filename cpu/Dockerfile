@@ -1,4 +1,5 @@
-FROM ghcr.io/mfem/containers/base:latest
+ARG image_namespace=mfem/containers
+FROM ghcr.io/${image_namespace}/base:latest
 
 ARG num_jobs
 ARG hypre_version

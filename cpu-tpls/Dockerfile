@@ -1,4 +1,5 @@
-FROM ghcr.io/mfem/containers/cpu:latest
+ARG image_namespace=mfem/containers
+FROM ghcr.io/${image_namespace}/cpu:latest
 
 ARG num_jobs
 
