@@ -37,21 +37,53 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v4
+
       - name: build base image
-        run: docker compose build base
+        run: >-
+          docker compose build --builder "${{ steps.buildx.outputs.name }}"
+          --cache-from "type=gha,scope=base"
+          --cache-to "type=gha,mode=max,scope=base" base
 
       - name: build cpu images
         run: |
-          docker compose build cpu
-          docker compose build cpu-tpls
-          docker compose build --build-arg base_image=cpu-tpls developer-cpu
+          docker compose build --builder "${{ steps.buildx.outputs.name }}" \
+            --cache-from "type=gha,scope=cpu" \
+            --cache-from "type=gha,scope=base" \
+            --cache-to "type=gha,mode=max,scope=cpu" cpu
+          docker compose build --builder "${{ steps.buildx.outputs.name }}" \
+            --cache-from "type=gha,scope=cpu-tpls" \
+            --cache-from "type=gha,scope=cpu" \
+            --cache-to "type=gha,mode=max,scope=cpu-tpls" cpu-tpls
+          docker compose build --builder "${{ steps.buildx.outputs.name }}" \
+            --cache-from "type=gha,scope=developer-cpu" \
+            --cache-from "type=gha,scope=cpu-tpls" \
+            --cache-to "type=gha,mode=max,scope=developer-cpu" \
+            --build-arg base_image=cpu-tpls developer-cpu
 
       - name: build cuda images
         run: |
-          docker compose build --build-arg cuda_arch_sm=89 cuda
-          docker compose build developer-cuda
-          docker compose build --build-arg cuda_arch_sm=75 cuda
-          docker compose build --build-arg cuda_arch_sm=75 developer-cuda
+          docker compose build --builder "${{ steps.buildx.outputs.name }}" \
+            --cache-from "type=gha,scope=cuda-sm89" \
+            --cache-from "type=gha,scope=base" \
+            --cache-to "type=gha,mode=max,scope=cuda-sm89" \
+            --build-arg cuda_arch_sm=89 cuda
+          docker compose build --builder "${{ steps.buildx.outputs.name }}" \
+            --cache-from "type=gha,scope=developer-cuda-sm89" \
+            --cache-from "type=gha,scope=cuda-sm89" \
+            --cache-to "type=gha,mode=max,scope=developer-cuda-sm89" developer-cuda
+          docker compose build --builder "${{ steps.buildx.outputs.name }}" \
+            --cache-from "type=gha,scope=cuda-sm75" \
+            --cache-from "type=gha,scope=base" \
+            --cache-to "type=gha,mode=max,scope=cuda-sm75" \
+            --build-arg cuda_arch_sm=75 cuda
+          docker compose build --builder "${{ steps.buildx.outputs.name }}" \
+            --cache-from "type=gha,scope=developer-cuda-sm75" \
+            --cache-from "type=gha,scope=cuda-sm75" \
+            --cache-to "type=gha,mode=max,scope=developer-cuda-sm75" \
+            --build-arg cuda_arch_sm=75 developer-cuda
 
   build-and-push-base:
     name: build and push base image
@@ -64,6 +96,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v4
+
       - name: Log into registry ${{ env.REGISTRY }}
         uses: docker/login-action@v4
         with:
@@ -72,7 +108,10 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: build base image
-        run: docker compose build base
+        run: >-
+          docker compose build --builder "${{ steps.buildx.outputs.name }}"
+          --cache-from "type=gha,scope=base"
+          --cache-to "type=gha,mode=max,scope=base" base
 
       - name: push base image
         run: docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/base:latest
@@ -89,6 +128,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v4
+
       - name: Log into registry ${{ env.REGISTRY }}
         uses: docker/login-action@v4
         with:
@@ -97,7 +140,10 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: build cpu image
-        run: docker compose build cpu
+        run: >-
+          docker compose build --builder "${{ steps.buildx.outputs.name }}"
+          --cache-from "type=gha,scope=cpu" --cache-from "type=gha,scope=base"
+          --cache-to "type=gha,mode=max,scope=cpu" cpu
 
       - name: push cpu image
         run: |
@@ -106,7 +152,10 @@ jobs:
           docker push "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/cpu:$IMAGE_TAG"
 
       - name: build cpu-tpls image
-        run: docker compose build cpu-tpls
+        run: >-
+          docker compose build --builder "${{ steps.buildx.outputs.name }}"
+          --cache-from "type=gha,scope=cpu-tpls" --cache-from "type=gha,scope=cpu"
+          --cache-to "type=gha,mode=max,scope=cpu-tpls" cpu-tpls
 
       - name: push cpu-tpls image
         run: |
@@ -115,7 +164,11 @@ jobs:
           docker push "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/cpu-tpls:$IMAGE_TAG"
 
       - name: build developer-cpu image
-        run: docker compose build --build-arg base_image=cpu-tpls developer-cpu
+        run: >-
+          docker compose build --builder "${{ steps.buildx.outputs.name }}"
+          --cache-from "type=gha,scope=developer-cpu" --cache-from "type=gha,scope=cpu-tpls"
+          --cache-to "type=gha,mode=max,scope=developer-cpu"
+          --build-arg base_image=cpu-tpls developer-cpu
 
       - name: push developer-cpu image
         run: |
@@ -135,6 +188,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v4
+
       - name: Log into registry ${{ env.REGISTRY }}
         uses: docker/login-action@v4
         with:
@@ -144,7 +201,11 @@ jobs:
 
       - name: build cuda-sm89 image
         run: |
-          docker compose build --build-arg cuda_arch_sm=89 cuda
+          docker compose build --builder "${{ steps.buildx.outputs.name }}" \
+            --cache-from "type=gha,scope=cuda-sm89" \
+            --cache-from "type=gha,scope=base" \
+            --cache-to "type=gha,mode=max,scope=cuda-sm89" \
+            --build-arg cuda_arch_sm=89 cuda
           docker image tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/cuda:latest \
             "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/cuda-sm89:$IMAGE_TAG"
 
@@ -153,7 +214,10 @@ jobs:
 
       - name: build developer-cuda-sm89 image
         run: |
-          docker compose build developer-cuda
+          docker compose build --builder "${{ steps.buildx.outputs.name }}" \
+            --cache-from "type=gha,scope=developer-cuda-sm89" \
+            --cache-from "type=gha,scope=cuda-sm89" \
+            --cache-to "type=gha,mode=max,scope=developer-cuda-sm89" developer-cuda
           docker image tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/developer-cuda:latest \
             "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/developer-cuda-sm89:$IMAGE_TAG"
 
@@ -172,6 +236,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v4
+
       - name: Log into registry ${{ env.REGISTRY }}
         uses: docker/login-action@v4
         with:
@@ -181,7 +249,11 @@ jobs:
 
       - name: build cuda-sm75 image
         run: |
-          docker compose build --build-arg cuda_arch_sm=75 cuda
+          docker compose build --builder "${{ steps.buildx.outputs.name }}" \
+            --cache-from "type=gha,scope=cuda-sm75" \
+            --cache-from "type=gha,scope=base" \
+            --cache-to "type=gha,mode=max,scope=cuda-sm75" \
+            --build-arg cuda_arch_sm=75 cuda
           docker image tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/cuda:latest \
             "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/cuda-sm75:$IMAGE_TAG"
 
@@ -190,7 +262,11 @@ jobs:
 
       - name: build developer-cuda-sm75 image
         run: |
-          docker compose build --build-arg cuda_arch_sm=75 developer-cuda
+          docker compose build --builder "${{ steps.buildx.outputs.name }}" \
+            --cache-from "type=gha,scope=developer-cuda-sm75" \
+            --cache-from "type=gha,scope=cuda-sm75" \
+            --cache-to "type=gha,mode=max,scope=developer-cuda-sm75" \
+            --build-arg cuda_arch_sm=75 developer-cuda
           docker image tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/developer-cuda:latest \
             "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/developer-cuda-sm75:$IMAGE_TAG"
 
