@@ -46,6 +46,11 @@ jobs:
           docker compose build cpu-tpls
           docker compose build --build-arg base_image=cpu-tpls developer-cpu
 
+      - name: run CPU MFEM smoke test
+        run: >
+          docker run --rm ghcr.io/mfem/containers/cpu:latest
+          bash -lc 'cd ~/mfem/examples && mpirun -np 2 ./ex1p -no-vis'
+
       - name: build cuda images
         run: |
           docker compose build --build-arg cuda_arch_sm=89 cuda
