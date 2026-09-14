@@ -31,7 +31,9 @@ env:
 jobs:
   build-images:
     name: build images
-    if: github.event_name == 'pull_request'
+    if: false
+    # TODO for testing
+    # if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -60,7 +62,8 @@ jobs:
 
   build-and-push-base:
     name: build and push base image
-    if: github.event_name != 'pull_request'
+    # TODO for testing
+    # if: github.event_name != 'pull_request'
     permissions:
       contents: read
       packages: write
@@ -85,7 +88,8 @@ jobs:
   build-and-push-cpu:
     name: build and push cpu images
     needs: build-and-push-base
-    if: github.event_name != 'pull_request'
+    # TODO for testing
+    # if: github.event_name != 'pull_request'
     permissions:
       contents: read
       packages: write
@@ -131,7 +135,8 @@ jobs:
   build-and-push-cuda-sm89:
     name: build and push cuda-sm89 images
     needs: build-and-push-base
-    if: github.event_name != 'pull_request'
+    # TODO for testing
+    # if: github.event_name != 'pull_request'
     permissions:
       contents: read
       packages: write
@@ -168,7 +173,8 @@ jobs:
   build-and-push-cuda-sm75:
     name: build and push cuda-sm75 images
     needs: build-and-push-base
-    if: github.event_name != 'pull_request'
+    # TODO for testing
+    # if: github.event_name != 'pull_request'
     permissions:
       contents: read
       packages: write
