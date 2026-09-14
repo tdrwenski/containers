@@ -4,47 +4,52 @@ services:
       context: base
       args:
         num_jobs: 8
-    image: ghcr.io/mfem/containers/base:latest
+    image: ghcr.io/${IMAGE_NAME_PREFIX:-mfem/containers}/base:latest
 
   cpu:
     build:
       context: cpu
       args:
+        image_namespace: ${IMAGE_NAME_PREFIX:-mfem/containers}
         num_jobs: 8
         hypre_version: 2.31.0
         mfem_ref: ${MFEM_REF:-master}
-    image: ghcr.io/mfem/containers/cpu:latest
+    image: ghcr.io/${IMAGE_NAME_PREFIX:-mfem/containers}/cpu:latest
 
   cpu-tpls:
     build:
       context: cpu-tpls
       args:
+        image_namespace: ${IMAGE_NAME_PREFIX:-mfem/containers}
         num_jobs: 8
-    image: ghcr.io/mfem/containers/cpu-tpls:latest
+    image: ghcr.io/${IMAGE_NAME_PREFIX:-mfem/containers}/cpu-tpls:latest
 
   cuda:
     build:
       context: cuda
       args:
+        image_namespace: ${IMAGE_NAME_PREFIX:-mfem/containers}
         num_jobs: 8
         cuda_arch_sm: 89
         hypre_version: 2.31.0
         mfem_ref: ${MFEM_REF:-master}
-    image: ghcr.io/mfem/containers/cuda:latest
+    image: ghcr.io/${IMAGE_NAME_PREFIX:-mfem/containers}/cuda:latest
 
   developer-cpu:
     build:
       context: developer
       args:
+        image_namespace: ${IMAGE_NAME_PREFIX:-mfem/containers}
         base_image: cpu-tpls
         num_jobs: 8
-    image: ghcr.io/mfem/containers/developer-cpu:latest
+    image: ghcr.io/${IMAGE_NAME_PREFIX:-mfem/containers}/developer-cpu:latest
 
   developer-cuda:
     build:
       context: developer
       args:
+        image_namespace: ${IMAGE_NAME_PREFIX:-mfem/containers}
         base_image: cuda
         num_jobs: 8
         cuda_arch_sm: 89
-    image: ghcr.io/mfem/containers/developer-cuda:latest
+    image: ghcr.io/${IMAGE_NAME_PREFIX:-mfem/containers}/developer-cuda:latest

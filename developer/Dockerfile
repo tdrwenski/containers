@@ -1,5 +1,6 @@
 ARG base_image
-FROM ghcr.io/mfem/containers/${base_image}:latest
+ARG image_namespace=mfem/containers
+FROM ghcr.io/${image_namespace}/${base_image}:latest
 
 USER root
 

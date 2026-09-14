@@ -29,33 +29,33 @@ env:
   IMAGE_TAG: ${{ github.event.inputs.image_tag || 'latest' }}
 
 jobs:
-  build-images:
-    name: build images
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
+  # build-images:
+  #   name: build images
+  #   if: github.event_name == 'pull_request'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v6
 
-      - name: build base image
-        run: docker compose build base
+  #     - name: build base image
+  #       run: docker compose build base
 
-      - name: build cpu images
-        run: |
-          docker compose build cpu
-          docker compose build cpu-tpls
-          docker compose build --build-arg base_image=cpu-tpls developer-cpu
+  #     - name: build cpu images
+  #       run: |
+  #         docker compose build cpu
+  #         docker compose build cpu-tpls
+  #         docker compose build --build-arg base_image=cpu-tpls developer-cpu
 
-      - name: build cuda images
-        run: |
-          docker compose build --build-arg cuda_arch_sm=89 cuda
-          docker compose build developer-cuda
-          docker compose build --build-arg cuda_arch_sm=75 cuda
-          docker compose build --build-arg cuda_arch_sm=75 developer-cuda
+  #     - name: build cuda images
+  #       run: |
+  #         docker compose build --build-arg cuda_arch_sm=89 cuda
+  #         docker compose build developer-cuda
+  #         docker compose build --build-arg cuda_arch_sm=75 cuda
+  #         docker compose build --build-arg cuda_arch_sm=75 developer-cuda
 
   build-and-push-base:
     name: build and push base image
-    if: github.event_name != 'pull_request'
+    # if: github.event_name != 'pull_request'
     permissions:
       contents: read
       packages: write
@@ -80,7 +80,7 @@ jobs:
   build-and-push-cpu:
     name: build and push cpu images
     needs: build-and-push-base
-    if: github.event_name != 'pull_request'
+    # if: github.event_name != 'pull_request'
     permissions:
       contents: read
       packages: write
@@ -126,7 +126,7 @@ jobs:
   build-and-push-cuda-sm89:
     name: build and push cuda-sm89 images
     needs: build-and-push-base
-    if: github.event_name != 'pull_request'
+    # if: github.event_name != 'pull_request'
     permissions:
       contents: read
       packages: write
@@ -163,7 +163,7 @@ jobs:
   build-and-push-cuda-sm75:
     name: build and push cuda-sm75 images
     needs: build-and-push-base
-    if: github.event_name != 'pull_request'
+    # if: github.event_name != 'pull_request'
     permissions:
       contents: read
       packages: write
