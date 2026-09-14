@@ -25,13 +25,16 @@ env:
   REGISTRY: ghcr.io
   # github.repository as <account>/<repo>
   IMAGE_NAME_PREFIX: ${{ github.repository }}
+  LOCAL_IMAGE_PREFIX: mfem/containers
   MFEM_REF: ${{ github.event.inputs.mfem_ref || 'master' }}
   IMAGE_TAG: ${{ github.event.inputs.image_tag || 'latest' }}
 
 jobs:
   build-images:
     name: build images
-    if: github.event_name == 'pull_request'
+    if: false
+    # TODO for testing
+    # if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -46,6 +49,11 @@ jobs:
           docker compose build cpu-tpls
           docker compose build --build-arg base_image=cpu-tpls developer-cpu
 
+      - name: run CPU MFEM smoke test
+        run: >
+          docker run --rm ghcr.io/mfem/containers/cpu:latest
+          bash -lc 'cd ~/mfem/examples && mpirun -np 2 ./ex1p -no-vis'
+
       - name: build cuda images
         run: |
           docker compose build --build-arg cuda_arch_sm=89 cuda
@@ -55,7 +63,8 @@ jobs:
 
   build-and-push-base:
     name: build and push base image
-    if: github.event_name != 'pull_request'
+    # TODO for testing
+    # if: github.event_name != 'pull_request'
     permissions:
       contents: read
       packages: write
@@ -75,12 +84,16 @@ jobs:
         run: docker compose build base
 
       - name: push base image
-        run: docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/base:latest
+        run: |
+          docker tag ${{ env.REGISTRY }}/${{ env.LOCAL_IMAGE_PREFIX }}/base:latest \
+            "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/base:latest"
+          docker push "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/base:latest"
 
   build-and-push-cpu:
     name: build and push cpu images
     needs: build-and-push-base
-    if: github.event_name != 'pull_request'
+    # TODO for testing
+    # if: github.event_name != 'pull_request'
     permissions:
       contents: read
       packages: write
@@ -101,7 +114,7 @@ jobs:
 
       - name: push cpu image
         run: |
-          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/cpu:latest \
+          docker tag ${{ env.REGISTRY }}/${{ env.LOCAL_IMAGE_PREFIX }}/cpu:latest \
             "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/cpu:$IMAGE_TAG"
           docker push "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/cpu:$IMAGE_TAG"
 
@@ -110,7 +123,7 @@ jobs:
 
       - name: push cpu-tpls image
         run: |
-          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/cpu-tpls:latest \
+          docker tag ${{ env.REGISTRY }}/${{ env.LOCAL_IMAGE_PREFIX }}/cpu-tpls:latest \
             "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/cpu-tpls:$IMAGE_TAG"
           docker push "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/cpu-tpls:$IMAGE_TAG"
 
@@ -119,14 +132,15 @@ jobs:
 
       - name: push developer-cpu image
         run: |
-          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/developer-cpu:latest \
+          docker tag ${{ env.REGISTRY }}/${{ env.LOCAL_IMAGE_PREFIX }}/developer-cpu:latest \
             "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/developer-cpu:$IMAGE_TAG"
           docker push "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/developer-cpu:$IMAGE_TAG"
 
   build-and-push-cuda-sm89:
     name: build and push cuda-sm89 images
     needs: build-and-push-base
-    if: github.event_name != 'pull_request'
+    # TODO for testing
+    # if: github.event_name != 'pull_request'
     permissions:
       contents: read
       packages: write
@@ -145,7 +159,7 @@ jobs:
       - name: build cuda-sm89 image
         run: |
           docker compose build --build-arg cuda_arch_sm=89 cuda
-          docker image tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/cuda:latest \
+          docker image tag ${{ env.REGISTRY }}/${{ env.LOCAL_IMAGE_PREFIX }}/cuda:latest \
             "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/cuda-sm89:$IMAGE_TAG"
 
       - name: push cuda-sm89 image
@@ -154,7 +168,7 @@ jobs:
       - name: build developer-cuda-sm89 image
         run: |
           docker compose build developer-cuda
-          docker image tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/developer-cuda:latest \
+          docker image tag ${{ env.REGISTRY }}/${{ env.LOCAL_IMAGE_PREFIX }}/developer-cuda:latest \
             "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/developer-cuda-sm89:$IMAGE_TAG"
 
       - name: push developer-cuda-sm89 image
@@ -163,7 +177,8 @@ jobs:
   build-and-push-cuda-sm75:
     name: build and push cuda-sm75 images
     needs: build-and-push-base
-    if: github.event_name != 'pull_request'
+    # TODO for testing
+    # if: github.event_name != 'pull_request'
     permissions:
       contents: read
       packages: write
@@ -182,7 +197,7 @@ jobs:
       - name: build cuda-sm75 image
         run: |
           docker compose build --build-arg cuda_arch_sm=75 cuda
-          docker image tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/cuda:latest \
+          docker image tag ${{ env.REGISTRY }}/${{ env.LOCAL_IMAGE_PREFIX }}/cuda:latest \
             "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/cuda-sm75:$IMAGE_TAG"
 
       - name: push cuda-sm75 image
@@ -191,7 +206,7 @@ jobs:
       - name: build developer-cuda-sm75 image
         run: |
           docker compose build --build-arg cuda_arch_sm=75 developer-cuda
-          docker image tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/developer-cuda:latest \
+          docker image tag ${{ env.REGISTRY }}/${{ env.LOCAL_IMAGE_PREFIX }}/developer-cuda:latest \
             "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PREFIX }}/developer-cuda-sm75:$IMAGE_TAG"
 
       - name: push developer-cuda-sm75 image
