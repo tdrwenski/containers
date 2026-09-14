@@ -37,6 +37,8 @@ services:
       context: developer
       args:
         base_image: cpu-tpls
+        cuda_arch_sm: 0
+        mfem_use_cuda: NO
         num_jobs: 8
     image: ghcr.io/mfem/containers/developer-cpu:latest
 
@@ -47,4 +49,5 @@ services:
         base_image: cuda
         num_jobs: 8
         cuda_arch_sm: 89
+        mfem_use_cuda: YES
     image: ghcr.io/mfem/containers/developer-cuda:latest

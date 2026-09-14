@@ -1,4 +1,7 @@
 ARG base_image
+ARG cuda_arch_sm
+ARG mfem_use_cuda
+
 FROM ghcr.io/mfem/containers/${base_image}:latest
 
 USER root
@@ -15,7 +18,13 @@ RUN tar xzf openvscode-server-v1.69.1-linux-x64.tar.gz && chown -R euler:euler o
 USER euler
 WORKDIR /home/euler
 
-ADD --chown=euler:euler clangd_compile_flags.txt ./mfem/compile_flags.txt
+# Create compile_commands for clangd plugin
+RUN cmake -S mfem -B mfem/build \
+        -DMFEM_USE_MPI=YES \
+        -DMFEM_USE_HYPRE=YES \
+        -DMFEM_USE_CUDA=${mfem_use_cuda} \
+        -DCMAKE_CUDA_ARCHITECTURES=${cuda_arch_sm} \
+        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
 # Install OpenVSCode as user
 RUN mkdir -p ${HOME}/.openvscode-server/extensions
