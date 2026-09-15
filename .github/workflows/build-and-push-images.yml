@@ -31,7 +31,7 @@ env:
 jobs:
   build-images:
     name: build images
-    if: github.event_name == 'pull_request'
+    if: false # TODO for testing: was github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -48,7 +48,7 @@ jobs:
 
       - name: run CPU MFEM smoke test
         run: >
-          docker run --rm ghcr.io/mfem/containers/cpu:latest
+          docker run --rm ghcr.io/${{ env.IMAGE_NAME_PREFIX }}/cpu:latest
           bash -lc 'cd ~/mfem/examples && mpirun -np 2 ./ex1p -no-vis'
 
       - name: build cuda images
@@ -60,7 +60,7 @@ jobs:
 
   build-and-push-base:
     name: build and push base image
-    if: github.event_name != 'pull_request'
+    # TODO for testing: restore if: github.event_name != 'pull_request'
     permissions:
       contents: read
       packages: write
@@ -85,7 +85,7 @@ jobs:
   build-and-push-cpu:
     name: build and push cpu images
     needs: build-and-push-base
-    if: github.event_name != 'pull_request'
+    # TODO for testing: restore if: github.event_name != 'pull_request'
     permissions:
       contents: read
       packages: write
@@ -131,7 +131,7 @@ jobs:
   build-and-push-cuda-sm89:
     name: build and push cuda-sm89 images
     needs: build-and-push-base
-    if: github.event_name != 'pull_request'
+    # TODO for testing: restore if: github.event_name != 'pull_request'
     permissions:
       contents: read
       packages: write
@@ -168,7 +168,7 @@ jobs:
   build-and-push-cuda-sm75:
     name: build and push cuda-sm75 images
     needs: build-and-push-base
-    if: github.event_name != 'pull_request'
+    # TODO for testing: restore if: github.event_name != 'pull_request'
     permissions:
       contents: read
       packages: write

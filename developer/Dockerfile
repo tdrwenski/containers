@@ -1,6 +1,7 @@
 ARG base_image
+ARG image_namespace=mfem/containers
 
-FROM ghcr.io/mfem/containers/${base_image}:latest
+FROM ghcr.io/${image_namespace}/${base_image}:latest
 
 ARG cuda_arch_sm
 ARG mfem_use_cuda=NO
